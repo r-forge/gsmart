@@ -1,0 +1,141 @@
+\documentclass[12pt]{article}
+\usepackage[left=3cm,right=2cm,top=3cm,bottom=2cm,a4paper,includehead,includefoot]{geometry} 
+\usepackage{natbib}
+\usepackage{amsmath}
+
+%\VignetteIndexEntry{Vignette on gsmart package}
+
+% TITLE PAGE
+\title{gsmart v. 1.0 Package Vignette}
+\author{Stephan Artmann <stephan-artmann@gmx.net>,\\Mathias Fuchs}
+\date{G\"ottingen 2012}
+
+
+% BEGIN OF DOCUMENT
+\begin{document}
+\maketitle
+\tableofcontents
+\section{Introduction}
+The 'gsmart' package (Gene Set Microarray Analysis) intends to bring together different functionalities for high-throughput gene set testing. This is based on random sampling from rotation data, as done for example by \cite[]{wu_roast:_2010}. The test statistic can either be a two-sample Wilcoxon Test or a reimplementation of the test statistic described in \cite[] {goeman_global_2004}. Multiple hypothesis testing correction is done as in \cite[]{tian}. The package is still under development and further functions shall soon be added. A more detailed description will soon be available \cite[] {fuchs_artmann_prep}.
+
+\section{Usage}
+An example on how to use gsmart is given here.\\
+In this synthetic experiment, 8 microarray replicates are present with three gene sets on each. Additionally, we need a corresponding matrix $\boldsymbol{Y}$ for mRNAs. Here we assume we have 20 mRNAs and 10 microarray replicates:
+<<DatagenerationY>>=
+#######################################
+### Generate random expression data ###
+#######################################
+# Generate random mRNA expression data with 20 mRNAs
+# and 10 replicates
+Y = rnorm(200);
+dim(Y) = c(20,10);
+rownames(Y) = 1:20;
+@
+We want to do two-group comparisons between two groups $1$ and $2$.
+
+<<groups>>=
+# Lets assume that the corresponding mRNA experiments had 5 replicates in each group
+groups = (c(1,1,1,1,1,2,2,2,2,2));
+@
+
+Next, we need to know which gene is in which gene set, which is represented as a two-column data.frame, with genes in its first, gene sets in its second column. 
+<<allocation>>=
+####################
+### Perform Test ###
+####################
+library(gsmart)
+#Let miRNA 1 attack mRNAs 1 to 9 and miRNA 2 attack mRNAs 10 to 17.
+# mRNAs 18 to 20 are not attacked. miRNA 3 has no gene set.
+miR = c(rep(1,9),c(rep(2,8)));
+mRNAs = 1:17;
+A = data.frame(mRNAs,miR); # Note that the gene sets MUST be in the second column!
+A
+@
+
+Finally, the function `analyse.gsmart' is called which does the testing.
+<<analysis>>=
+set.seed(1)
+P = analyse.gsmart(Y,groups,A)
+P
+
+
+@
+Note that for the empty gene set `NA' was returned.
+
+\begin{thebibliography}{}
+
+\bibitem[Artmann {\em et~al.}(sub)Artmann, Jung, Bleckmann, and
+  Bei{\ss}barth]{detection_artmann_submitted}
+Artmann, S., Jung, K., Bleckmann, A., and Bei{\ss}barth, T. (sub.).
+\newblock {Detection of Simultaneous Group Effects in microRNA Expression and
+  related functional Gene Sets}.
+\newblock {\em submitted\/}.
+
+\bibitem[Brunner(2009)Brunner]{brunner_repeated_2009}
+Brunner, E. (2009).
+\newblock Repeated measures under non-sphericity.
+\newblock {\em Proceedings of the National Academy of Sciences of the United
+  States of America\/}, pages 605--609.
+
+\bibitem[Goeman {\em et~al.}(2004)Goeman, van~de Geer, de~Kort, and van
+  Houwelingen]{goeman_global_2004}
+Goeman, J.~J., van~de Geer, S.~A., de~Kort, F., and van Houwelingen, H.~C.
+  (2004).
+\newblock A global test for groups of genes: testing association with a
+  clinical outcome.
+\newblock {\em Bioinformatics\/}, {\bf 20}(1), 93 --99.
+
+\bibitem[Hummel {\em et~al.}(2008)Hummel, Meister, and
+  Mansmann]{hummel_globalancova:_2008}
+Hummel, M., Meister, R., and Mansmann, U. (2008).
+\newblock {GlobalANCOVA:} exploration and assessment of gene group effects.
+\newblock {\em Bioinformatics\/}, {\bf 24}(1), 78 --85.
+
+\bibitem[Jung {\em et~al.}(sub)Jung, Becker, Brunner, and
+  Bei{\ss}barth]{jung_comparison_submitted}
+Jung, K., Becker, B., Brunner, E., and Bei{\ss}barth, T. (sub.).
+\newblock {Comparison of Global Tests for Functional Gene Sets in Two-Group
+  Designs and Selection of Potentially Effect-causing Genes}.
+\newblock {\em submitted\/}.
+
+\bibitem[Majewski {\em et~al.}(2010)Majewski, Ritchie, Phipson, Corbin,
+  Pakusch, Ebert, Busslinger, Koseki, Hu, Smyth, Alexander, Hilton, and
+  Blewitt]{majewski_opposing_2010}
+Majewski, I.~J., Ritchie, M.~E., Phipson, B., Corbin, J., Pakusch, M., Ebert,
+  A., Busslinger, M., Koseki, H., Hu, Y., Smyth, G.~K., Alexander, W.~S.,
+  Hilton, D.~J., and Blewitt, M.~E. (2010).
+\newblock Opposing roles of polycomb repressive complexes in hematopoietic stem
+  and progenitor cells.
+\newblock {\em Blood\/}, {\bf 116}(5), 731--739.
+
+\bibitem[Mansmann and Meister(2005)Mansmann and Meister]{mansmann_testing_2005}
+Mansmann, U. and Meister, R. (2005).
+\newblock Testing differential gene expression in functional groups. goeman's
+  global test versus an {ANCOVA} approach.
+\newblock {\em Methods of Information in Medicine\/}, {\bf 44}(3).
+
+\bibitem[Nielsen {\em et~al.}(2009)Joseph A Nielsen and Pierre Lau and Dragan Maric and Jeffery L Barker
+        and Lynn D Hudson.]{nielsen09}
+Joseph A Nielsen and Pierre Lau and Dragan Maric and Jeffery L Barker and Lynn D Hudson
+\newblock Integrating {microRNA} and {mRNA} expression profiles of neuronal
+        progenitors to identify regulatory networks underlying the onset
+        of cortical neurogenesis.
+\newblock {\em{BMC} Neuroscience\/}, {\bf 2009}
+
+\bibitem[Smyth(2004)Smyth]{smyth_gordon_k_linear_2004}
+Smyth, G.~K. (2004).
+\newblock Linear models and empirical bayes methods for assessing differential
+  expression in microarray experiments.
+\newblock {\em Statistical Applications in Genetics and Molecular Biology\/},
+  {\bf 3}(1).
+
+\bibitem[Wu {\em et~al.}(2010)Wu, Lim, Vaillant, {Asselin-Labat}, Visvader, and
+  Smyth]{wu_roast:_2010}
+Wu, D., Lim, E., Vaillant, F., {Asselin-Labat}, M., Visvader, J.~E., and Smyth,
+  G.~K. (2010).
+\newblock {ROAST:} rotation gene set tests for complex microarray experiments.
+\newblock {\em Bioinformatics {(Oxford,} England)\/}, {\bf 26}(17).
+
+%%add Nielsen et al.
+\end{thebibliography}
+\end{document}

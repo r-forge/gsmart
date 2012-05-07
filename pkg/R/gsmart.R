@@ -8,10 +8,8 @@
 #' @param one.sided logical, optional. Shall one-sided p-values be returned as well? Only available for Wilcoxon.
 #' @return Tables of results.
 #' @author Stephan Artmann
-#' @examples
-##MAINEXAMPLE
-analyse.gs = function(X,response,gs.list,nrot=1000,tests=c("W","G"), one.sided = FALSE, verbose = FALSE) {
- R = test.gene.sets(X,response,gs.list,nrot=nrot,tests=tests, one.sided = one.sided, verbose = verbose);
+analyse.gsmart = function(X,response,gs.list,nrot=1000,tests=c("W","G"), one.sided = FALSE, verbose = FALSE) {
+ R = test.gs(X,response,gs.list,nrot=nrot,tests=tests, one.sided = one.sided, verbose = verbose);
  Res = list();
  for (i in 1:length(names(R$S.star))) {
   Res [[i]] = do.MHC.R(R$S.star[[i]]);
@@ -61,10 +59,6 @@ do.MHC.R =  function(S.star, left_sided = TRUE, filename){     ## all functions 
   return(MHC)
  }
 }
-
-#############################
-### Handy small functions ###
-#############################
 
 #' Test an Expression Matrix with Limma. Works with any design.
 #' @param X Expression matrix with samples in columns and genes in rows.
@@ -145,7 +139,7 @@ limma.one.sided = function (fit,lower=FALSE) {
 #' @param one.sided Shall one-sided results be returned as well? So far only possible for Wilcoxon statistic.
 #' @return List with matrix of rotated statistics and other fancy stuff.
 #' @author Stephan Artmann
-test.gene.sets = function (X, response, gene_sets_input, nrot = 1000 ,tests=c("W","G"),one.sided=TRUE, verbose=FALSE) {
+test.gs = function (X, response, gene_sets_input, nrot = 1000 ,tests=c("W","G"),one.sided=TRUE, verbose=FALSE) {
  ### Check Input ###
  if(is.null(rownames(X))) stop ("Please specify row names of X");
  if (length(tests) == 0) stop("Please provide a gene set test: Either W for the Wilcoxon statistic, or G for the Goeman statistic.")
@@ -282,9 +276,6 @@ test.gene.sets = function (X, response, gene_sets_input, nrot = 1000 ,tests=c("W
  return(x)
 }
 
-###############################
-### Current Test Statistics ###
-###############################
 
 #' Calculate Mhann-Whitney's U.
 #' @param ranks Ranks of p-values.
@@ -319,9 +310,7 @@ Q = function (X, response){
     }
     return(as.numeric(t(response) %*% t(X)%*% X %*% response) / dim(X)[1])
 }
-##########################
-### Rotation Functions ###
-##########################
+
 
 #' Gives a vector a unique spherical vector in the subspace of zero mean, of length 1
 #' @param m Probably length? TODO
@@ -374,7 +363,7 @@ rotation = function (n, method, genes_in_rows ) {
 	    stop("method 2 makes no sense in dimension 2")
 	}
 	else {
-	    turn = matrix(NA, nc = n, nr = n)
+	    turn = matrix(NA, ncol = n, nrow = n)
 	    M = c()
 	    M = rep(1, n) / sqrt(n) # this vector is orthogonal to what we need
 	    dim(M) = c(n, 1)
@@ -396,9 +385,6 @@ rotation = function (n, method, genes_in_rows ) {
     }
 }
 
-#############################################
-### Functions to deal with .star matrices ###
-#############################################
 
 
 #' Calculation of the least monotone majorant of q-values.  
@@ -478,7 +464,7 @@ do.tian = function(orig.p,rot.mat, gs.in.col=TRUE, left_sided = TRUE) {
     print(paste("Estimated portion of true nulls =", pi0))
 
     #NrMoreExtreme = rank(marg.p, ties = "max")       ## this is the number of more extreme p-values, i.e. the number of discoveries
-    NrMoreExtreme = rank(orig.p, ties = "max")       ## this is the number of more extreme p-values, i.e. the number of discoveries
+    NrMoreExtreme = rank(orig.p, ties.method = "max")       ## this is the number of more extreme p-values, i.e. the number of discoveries
     ExpNrFD = c()
 
     #for (i in 1:length(orig.p)){
@@ -521,11 +507,7 @@ marginal_p = function (x, y, left_sided = TRUE){
 
 
 
-###############################################################
-### Additional Functions ###
-###############################################################
-
-#' do.MHC.file
+#' do.MHC.file Do multiple hypothesis testing from file.
 #' @param filename filename
 #' @param left_sided left_sided
 #' @return return
@@ -544,7 +526,7 @@ do.MHC.file =  function(filename, left_sided = TRUE){ ## all functions for multi
 Data = function(fn = NA, GSEid = NA, two_class = FALSE) {
   require(GEOquery)
   if (file.exists(fn))
-    xx = getGEO(file = fn)
+    xx = getGEO(filename = fn)
   else
     xx = getGEO(GSEid)
   x = list()
@@ -558,14 +540,14 @@ Data = function(fn = NA, GSEid = NA, two_class = FALSE) {
     print("out of")
     print(length(x$DA.m$p[,2]))
     print("significant mRNA q-values")
-    q = p.adjust(x2$DA.m$p[,2], method = "BH")
+    q = p.adjust(x$DA.m$p[,2], method = "BH")
     print(length(which(q < 0.05)))
     x$m.short = x$m[order(x$DA.m$p[,2])[1:150],]
   }
   return(x)
 }
 
-#' Strip_NA_rows
+#' Strip NAr ows Strip rows that are NA.
 #' @param A a data matrix
 #' @return returns the same matrix without those rows with at least one NA value
 #' @author Mathias Fuchs
@@ -584,7 +566,7 @@ Strip_NA_rows = function(A){
     return(A) 
 }
 
-#' visualize TODO check spelling, visualize -> visualise :P
+#' Visualize TODO check spelling, visualize -> visualise :P
 #' @param A input expression matrix
 #' @param response the usual group/class vector
 #' @param method one out of "scatterplot3d", "rotate", "pairs" 
@@ -613,7 +595,7 @@ visualize = function(A, response, method = "rotate", NoPCA_for_pairs= 3) {
     }
 }
 
-#' Function.
+#' ShortenMatrixOntoPrincipalComponent Function.
 #' @param x x
 #' @param n_new n_new
 #' @author Mathias Fuchs
@@ -634,11 +616,11 @@ ShortenMatrixOntoPrincipalComponent = function(x, n_new){
 	return(diag(svd_x$d[1:n_new]) %*% t(svd_x$v[,1:n_new]))
     }
     else if (n_new == m){
-	reurn(diag(svd_x$d) %*% t(svd_x$v))
+	return(diag(svd_x$d) %*% t(svd_x$v))
     }
     else if (n_new > m){
 	stop("Wrong dimensions in svd.")
     }
 }
 
-# end of file
+
