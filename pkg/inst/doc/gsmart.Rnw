@@ -6,7 +6,7 @@
 %\VignetteIndexEntry{Vignette on gsmart package}
 
 % TITLE PAGE
-\title{gsmart v. 1.0 Package Vignette}
+\title{gsmart v. 1.1 Package Vignette}
 \author{Stephan Artmann <stephan-artmann@gmx.net>,\\Mathias Fuchs}
 \date{G\"ottingen 2012}
 
